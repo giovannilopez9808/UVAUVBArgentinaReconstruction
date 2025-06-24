@@ -32,6 +32,7 @@ dataset = dataset[[
     "minute",
     "UVA+UVB",
     "AOD",
+    "RD",
 ]]
 filename = join(
     "..",

@@ -1,5 +1,6 @@
 from scipy.integrate import trapezoid
 from modules.OMI import OMIData
+from matplotlib import pyplot
 from modules.TUV import TUV
 from os.path import join
 from pandas import (
@@ -45,6 +46,24 @@ def format_hour(
     return data
 
 
+def get_time_to_hour_decimal(
+    time: str,
+) -> float:
+    hour, minute = time.split(":")
+    hour = int(hour)
+    minute = int(minute)
+    time = hour+minute/60
+    return time
+
+
+dataset = read_csv(
+    "../data/data.csv",
+    parse_dates=True,
+    index_col=0,
+)
+dataset["Hours"] = dataset["Hour"].apply(
+    get_time_to_hour_decimal
+)
 filename = join(
     "..",
     "results",
@@ -75,9 +94,11 @@ first_ocurrence = data.groupby(
 last_ocurrence = data.groupby(
     "date",
 ).last()
+print(data)
+exit(1)
 mean = data.groupby(
     "date"
-).mean()
+).max()
 data = DataFrame()
 data.index = mean.index
 data["hour_initial"] = first_ocurrence["hour_decimal"]
@@ -145,9 +166,22 @@ for index in data.index:
             results["Hours"] <= daily_data["hour_final"]
         )
     ]
+    daily_dataset = dataset[
+        dataset.index.date == daily_data["date"].date()
+    ]
+    print(daily_data)
+    pyplot.plot(
+        results["Hours"],
+        results["UVA+UVB"],
+    )
+    pyplot.plot(
+        daily_dataset["Hours"],
+        daily_dataset["UVA+UVB"],
+    )
+    pyplot.show()
     doses = trapezoid(
         results["UVA+UVB"],
-        results["Hours"]*60,
+        results["Hours"]*3600,
     )
     doses = round(
         doses,
